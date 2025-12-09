@@ -1,44 +1,67 @@
 import 'package:flutter/material.dart';
+import 'package:weather_now/screens/favorites_screen.dart';
+import 'package:weather_now/state/app_state.dart';
 
 class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
+  const HomeScreen({super.key, required this.appState});
+
+  final AppState appState;
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('WeatherNow'),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(Icons.star_outline),
-            tooltip: 'Избранные',
+    return AnimatedBuilder(
+      animation: appState,
+      builder: (context, _) {
+        return Scaffold(
+          appBar: AppBar(
+            title: const Text('WeatherNow'),
+            actions: [
+              IconButton(
+                onPressed: () => _openFavorites(context),
+                icon: const Icon(Icons.star_outline),
+                tooltip: 'Избранные',
+              ),
+            ],
           ),
-        ],
+          body: ListView(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            children: [
+              _CityHeader(
+                city: appState.selectedCity,
+                description: 'Ясно',
+                temperature: '+18°',
+                icon: Icons.wb_sunny_rounded,
+              ),
+              const SizedBox(height: 12),
+              const _WeatherHighlights(
+                feelsLike: '+17°',
+                wind: '3 м/с',
+                humidity: '42%',
+                pressure: '753 мм',
+              ),
+              const SizedBox(height: 12),
+              _ActionButtons(
+                onRefresh: () => _showSnackbar(context, 'Обновление погоды...'),
+                onFavorites: () => _openFavorites(context),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openFavorites(BuildContext context) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => FavoritesScreen(appState: appState),
       ),
-      body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        children: [
-          _CityHeader(
-            city: 'Москва',
-            description: 'Ясно',
-            temperature: '+18°',
-            icon: Icons.wb_sunny_rounded,
-          ),
-          const SizedBox(height: 12),
-          _WeatherHighlights(
-            feelsLike: '+17°',
-            wind: '3 м/с',
-            humidity: '42%',
-            pressure: '753 мм',
-          ),
-          const SizedBox(height: 12),
-          _ActionButtons(
-            onRefresh: () {},
-            onFavorites: () {},
-          ),
-        ],
-      ),
+    );
+  }
+
+  void _showSnackbar(BuildContext context, String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(message)),
     );
   }
 }
@@ -208,4 +231,3 @@ class _ActionButtons extends StatelessWidget {
     );
   }
 }
-

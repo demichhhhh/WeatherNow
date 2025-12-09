@@ -1,7 +1,23 @@
 import 'package:flutter/material.dart';
+import 'package:weather_now/state/app_state.dart';
 
-class AddCityScreen extends StatelessWidget {
-  const AddCityScreen({super.key});
+class AddCityScreen extends StatefulWidget {
+  const AddCityScreen({super.key, required this.appState});
+
+  final AppState appState;
+
+  @override
+  State<AddCityScreen> createState() => _AddCityScreenState();
+}
+
+class _AddCityScreenState extends State<AddCityScreen> {
+  final TextEditingController _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,24 +39,36 @@ class AddCityScreen extends StatelessWidget {
             ),
             const SizedBox(height: 12),
             TextField(
+              controller: _controller,
               decoration: const InputDecoration(
                 hintText: 'Например, Москва',
               ),
-              onChanged: (_) {},
+              onSubmitted: (_) => _addCity(),
             ),
             const SizedBox(height: 16),
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
-                onPressed: () {},
+                onPressed: _addCity,
                 child: const Text('Добавить'),
               ),
             ),
-            const SizedBox(height: 16),
           ],
         ),
       ),
     );
   }
-}
 
+  void _addCity() {
+    final text = _controller.text;
+    final trimmed = text.trim();
+    final added = widget.appState.addCity(trimmed);
+    if (added) {
+      Navigator.of(context).pop(trimmed);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Введите уникальное название города')),
+      );
+    }
+  }
+}
