@@ -59,10 +59,10 @@ class _AddCityScreenState extends State<AddCityScreen> {
     );
   }
 
-  void _addCity() {
+  Future<void> _addCity() async {
     final text = _controller.text;
     final trimmed = text.trim();
-    final added = widget.appState.addCity(trimmed);
+    final added = await widget.appState.addCity(trimmed);
     if (added) {
       Navigator.of(context).pop(trimmed);
     } else {

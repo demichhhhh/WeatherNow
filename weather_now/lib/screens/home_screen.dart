@@ -12,6 +12,7 @@ class HomeScreen extends StatelessWidget {
     return AnimatedBuilder(
       animation: appState,
       builder: (context, _) {
+        final weather = appState.weather;
         return Scaffold(
           appBar: AppBar(
             title: const Text('WeatherNow'),
@@ -23,28 +24,46 @@ class HomeScreen extends StatelessWidget {
               ),
             ],
           ),
-          body: ListView(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            children: [
-              _CityHeader(
-                city: appState.selectedCity,
-                description: 'Ясно',
-                temperature: '+18°',
-                icon: Icons.wb_sunny_rounded,
-              ),
-              const SizedBox(height: 12),
-              const _WeatherHighlights(
-                feelsLike: '+17°',
-                wind: '3 м/с',
-                humidity: '42%',
-                pressure: '753 мм',
-              ),
-              const SizedBox(height: 12),
-              _ActionButtons(
-                onRefresh: () => _showSnackbar(context, 'Обновление погоды...'),
-                onFavorites: () => _openFavorites(context),
-              ),
-            ],
+          body: RefreshIndicator(
+            onRefresh: appState.fetchWeather,
+            child: ListView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              children: [
+                _CityHeader(
+                  city: appState.selectedCity,
+                  description: weather?.description ?? '—',
+                  temperature: weather != null
+                      ? '${weather.temperature.toStringAsFixed(0)}°'
+                      : '—',
+                  icon: Icons.wb_sunny_rounded,
+                  isLoading: appState.isLoadingWeather,
+                ),
+                if (appState.error != null) ...[
+                  const SizedBox(height: 8),
+                  _ErrorBanner(message: appState.error!),
+                ],
+                const SizedBox(height: 12),
+                _WeatherHighlights(
+                  feelsLike: weather != null
+                      ? '${weather.feelsLike.toStringAsFixed(0)}°'
+                      : '—',
+                  wind: weather != null
+                      ? '${weather.wind.toStringAsFixed(1)} м/с'
+                      : '—',
+                  humidity: weather?.humidity != null
+                      ? '${weather!.humidity!.toStringAsFixed(0)}%'
+                      : '—',
+                  pressure: weather?.pressure != null
+                      ? '${weather!.pressure!.toStringAsFixed(0)} мм'
+                      : '—',
+                ),
+                const SizedBox(height: 12),
+                _ActionButtons(
+                  onRefresh: appState.fetchWeather,
+                  onFavorites: () => _openFavorites(context),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -58,12 +77,6 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
-  void _showSnackbar(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
-  }
 }
 
 class _CityHeader extends StatelessWidget {
@@ -72,12 +85,14 @@ class _CityHeader extends StatelessWidget {
     required this.description,
     required this.temperature,
     required this.icon,
+    required this.isLoading,
   });
 
   final String city;
   final String description;
   final String temperature;
   final IconData icon;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
@@ -110,6 +125,14 @@ class _CityHeader extends StatelessWidget {
                   .headlineMedium
                   ?.copyWith(fontWeight: FontWeight.w800),
             ),
+            if (isLoading) ...[
+              const SizedBox(width: 12),
+              const SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            ],
           ],
         ),
       ),
@@ -228,6 +251,39 @@ class _ActionButtons extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+class _ErrorBanner extends StatelessWidget {
+  const _ErrorBanner({required this.message});
+
+  final String message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      padding: const EdgeInsets.all(12),
+      child: Row(
+        children: [
+          Icon(Icons.error_outline, color: Colors.red.shade400),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              message,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodyMedium
+                  ?.copyWith(color: Colors.red.shade700),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

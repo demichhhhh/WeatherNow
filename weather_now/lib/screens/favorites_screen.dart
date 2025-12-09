@@ -30,9 +30,9 @@ class FavoritesScreen extends StatelessWidget {
                         leading: Radio<int>(
                           value: index,
                           groupValue: appState.selectedIndex,
-                          onChanged: (value) {
+                          onChanged: (value) async {
                             if (value == null) return;
-                            appState.selectCity(value);
+                            await appState.selectCity(value);
                           },
                         ),
                         title: Text(city),
@@ -75,8 +75,8 @@ class FavoritesScreen extends StatelessWidget {
     }
   }
 
-  void _removeCity(BuildContext context, int index) {
-    final removed = appState.removeCity(index);
+  Future<void> _removeCity(BuildContext context, int index) async {
+    final removed = await appState.removeCity(index);
     if (!removed) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Нужен хотя бы один город')),
